@@ -32,4 +32,20 @@ public class WorldGenerator
 
         return n_map;
     }
+
+    public static IntegerMap GenerateBananas(int w, int h)
+    {
+        IntegerMap n_map = new IntegerMap(w, h);
+
+        for (var x = 0; x < n_map.width; x++)
+            for (var y = 0; y < n_map.width; y++)
+            {
+                n_map.SetValue((x, y), 1);
+            }
+
+        return n_map;
+    }
+
+
+
 }

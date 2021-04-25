@@ -15,10 +15,23 @@ public class MapController : MonoBehaviour
     public IntegerMap TerrainMap;
     public IntegerMap BananaMap;
 
-    private void Awake() => Instance = this;
+    public Grid mGrid;
+
+    private void Awake()
+    {
+
+        Instance = this;
+        mGrid = GetComponent<Grid>();
+    }
+
 
 
     public void UpdateMap()
+    {
+        UpdateMap(0, 0, MapW, MapH);
+    }
+
+    public void UpdateMap(int startx, int starty, int endx, int endy)
     {
         Vector3Int[] positions;
         TileBase[] tiles;
@@ -27,10 +40,13 @@ public class MapController : MonoBehaviour
         List<Vector3Int> positionRemovalList = new List<Vector3Int>();
         // Debug.Log($"ZLevel StructureMapUpdate has changes");
 
-        for (int i = 0; i < MapW; i++)
-            for (var j = 0; j < MapH; j++)
+        for (int i = startx; i < endx; i++)
+            for (var j = starty; j < endy; j++)
             {
+                if (i < 0 || i >= MapW || j < 0 || j >= MapH) continue;
+
                 var tile = (Tile)ScriptableObject.CreateInstance("Tile");
+                Debug.Log($"map update {TerrainMap.GetValue(i, j)}");
                 switch (TerrainMap.GetValue(i, j))
                 {
                     case -1:
@@ -78,5 +94,13 @@ public class MapController : MonoBehaviour
         // {
         //     FloorTileMap.SetTile(item, null);
         // }
+    }
+
+    bool debug = false;
+    public void RemoveJungle((int x, int y) pos)
+    {
+        TerrainMap.SetValue(pos, 1);
+        debug = true;
+        UpdateMap(pos.x - 1, pos.y - 1, pos.x + 1, pos.y + 1);
     }
 }
