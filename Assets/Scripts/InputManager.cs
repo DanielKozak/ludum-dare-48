@@ -27,6 +27,7 @@ public class InputManager : MonoBehaviour
         }
         else
         {
+            if (CurrenSelectedBuilding != null) CurrenSelectedBuilding.Deselect();
             Debug.Log($"Select {b.name}");
             if (b != null) b.Select();
 
@@ -41,14 +42,35 @@ public class InputManager : MonoBehaviour
     public static void SetMouseOver(Building b)
     {
         if (CurrentCursorMode == CursorMode.Build) return;
+
         MouseOverBuilding = b;
-        if (b != null) InputManager.SetKeyAction(KeyCode.Mouse1, b.OnRightClick);
+        if (b != null)
+        {
+            InputManager.SetKeyAction(KeyCode.Mouse1, b.OnRightClick);
+        }
         else
         {
-            if (UIManager.Instance.ContextMenuInstance == null) InputManager.RemoveKeyAction(KeyCode.Mouse1);
+
+            if (UIManager.Instance.ContextMenuInstance == null)
+            {
+                if (CurrenSelectedBuilding == null)
+                {
+                    return;
+                }
+
+                if (CurrenSelectedBuilding.isTruck)
+                {
+                    var pos = MapUtils.GetCellFromMousePos();
+
+                    InputManager.SetKeyAction(KeyCode.Mouse1, new IActions.Action_OrderTruckMove((Truck)CurrenSelectedBuilding));
+                    return;
+                }
+
+                InputManager.RemoveKeyAction(KeyCode.Mouse1);
+            }
+
+
         }
-
-
     }
     public static Building GetMouseOver()
     {
@@ -63,13 +85,13 @@ public class InputManager : MonoBehaviour
 
     public static void SetKeyAction(KeyCode code, IAction action)
     {
-        // Debug.Log($"SetKeyAction {code} : {action.GetType().Name}");
+        Debug.Log($"SetKeyAction {code} : {action.GetType().Name}");
 
         KeyActionDictionary[code] = action;
     }
     public static void RemoveKeyAction(KeyCode code)
     {
-        // Debug.Log($"RemoveKayAction {code}");
+        Debug.Log($"RemoveKayAction {code}");
 
         DirtyKeyCodeList.Add(code);
     }
@@ -91,7 +113,7 @@ public class InputManager : MonoBehaviour
         {
             if (KeyActionDictionary.ContainsKey(KeyCode.Mouse0))
             {
-                Debug.Log($"Mouse0");
+                // Debug.Log($"Mouse0");
 
                 AudioManager.PlaySound("click");
                 KeyActionDictionary[KeyCode.Mouse0].Execute();

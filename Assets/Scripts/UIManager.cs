@@ -16,72 +16,95 @@ public class UIManager : MonoBehaviour
     public GameObject InfoPanel;
     public GameObject InfoItemPrefab;
 
+    bool hintPinned = false;
+
+
+    public void ShowBuildHint(string text1, string text2 = "")
+    {
+        if (hintPinned) return;
+        BuildHintText.text = text1;
+        BuildStatText.text = text2;
+
+        BuildHintWindow.SetActive(true);
+    }
+
+    public void HideBuildHint()
+    {
+        BuildHintWindow.SetActive(false);
+
+    }
+
     public void OnBuildClicked(int id)
     {
+        Debug.Log("Build " + id);
         if (InputManager.CurrentCursorMode == InputManager.CursorMode.Build) return;
         InputManager.CurrentCursorMode = InputManager.CursorMode.Build;
         Sprite s = DataContainer.Instance.ConcreteGhostSprite;
         int fMode = 0;
+
         switch (id)
         {
             case 0: //probe
-                BuildHintText.text = $"<color=red> One time use </color>orbital dropped probe. Reveals bananas. Temporarily scares off monkeys";
-                BuildStatText.text = $"";
-
-                BuildHintWindow.SetActive(true);
+                ShowBuildHint($"<color=red> One time use </color>orbital dropped probe. Reveals bananas. Temporarily scares off monkeys");
+                hintPinned = true;
                 s = DataContainer.Instance.ProbeGhostSprite;
                 fMode = 3;
                 InputManager.SetKeyAction(KeyCode.Mouse0, new IActions.Action_DropProbe());
 
                 break;
             case 1: //extractor
-                BuildHintText.text = $"Extracts bananas from nature. Removes banana trees when they deplete. Must be fueled. <color=orange>Caution: </color> monkeys will steal bananas. pick up regularly with truck";
-                BuildStatText.text = $"Must be placed on concrete";
+                ShowBuildHint($"Extracts bananas from nature. Removes banana trees when they deplete. Must be fueled. <color=orange>Caution: </color> monkeys will steal bananas. pick up regularly with truck",
+                    $"Must be placed on concrete");
+                hintPinned = true;
 
-                BuildHintWindow.SetActive(true);
-                s = DataContainer.Instance.ProbeGhostSprite;
-                fMode = 3;
+                s = DataContainer.Instance.ExtractorGhostSprite;
+                fMode = 1;
                 InputManager.SetKeyAction(KeyCode.Mouse0, new IActions.Action_PlaceExtractor());
 
                 break;
             case 2: //oilrig
-                BuildHintText.text = $"Produces banana oil from bananas. Uses monkeys as slave labour. <color=orange>Caution: </color> monkeys will escape regularly";
-                BuildStatText.text = $"Must be placed on concrete";
+                ShowBuildHint($"Produces banana oil from bananas. Uses monkeys as slave labour. <color=orange>Caution: </color> monkeys will escape regularly", $"Must be placed on concrete");
+                hintPinned = true;
+                InputManager.SetKeyAction(KeyCode.Mouse0, new IActions.Action_PlaceRefinery());
 
-                BuildHintWindow.SetActive(true);
-                s = DataContainer.Instance.ProbeGhostSprite;
+                s = DataContainer.Instance.OilGhostSprite;
                 fMode = 1;
 
                 break;
             case 3: //trap
+                ShowBuildHint($"Traps monkeys as they stroll by. <color=orange>Caution: </color> monkeys will escape regularly, use truck to collect", $"Must be placed on concrete");
+                hintPinned = true;
 
-                BuildHintText.text = $"Traps monkeys as the stroll by. <color=orange>Caution: </color> monkeys will escape regularly, use truck to collect";
-                BuildStatText.text = $"Must be placed on concrete";
-                BuildHintWindow.SetActive(true);
-                s = DataContainer.Instance.ProbeGhostSprite;
+                s = DataContainer.Instance.TrapGhostSprite;
                 fMode = 1;
 
                 break;
             case 4: //concrete
-                BuildHintText.text = $"<color=red> One time use </color>orbital dropped probe. Reveals bananas. Temporarily scares off monkeys";
-                BuildStatText.text = $"Must be placed ajacent to concrete";
+                ShowBuildHint($"Concrete road. used as a base for all your industrialisation efforts.\n <color=red> Say NO to rainforests! </color>", $"Must be placed ajacent to another road");
+                hintPinned = true;
+                InputManager.SetKeyAction(KeyCode.Mouse0, new IActions.Action_PlaceRoad());
 
-                BuildHintWindow.SetActive(true);
-                s = DataContainer.Instance.ProbeGhostSprite;
-                fMode = 1;
+                s = DataContainer.Instance.ConcreteGhostSprite;
+                fMode = 2;
 
                 break;
             case 5: // truck
-                BuildHintText.text = $"Just a truck. Can be used to transport bananas and/or monkeys. Semi-intelligent driver (monkey?)";
-                BuildStatText.text = $"Drives on concrete";
-                BuildHintWindow.SetActive(true);
+                // ShowBuildHint($"Just a truck. Can be used to transport bananas and/or monkeys. Semi-intelligent driver (monkey?)", $"Drives on concrete");
+
                 s = DataContainer.Instance.ProbeGhostSprite;
-                fMode = 2;
+                fMode = 4;
                 break;
             case 6:
+                ShowBuildHint($"Bulldoze for half price", $"");
+                hintPinned = true;
+                InputManager.SetKeyAction(KeyCode.Mouse0, new IActions.Action_Bulldoze());
+
+                s = DataContainer.Instance.ConcreteGhostSprite;
+                fMode = 3;
                 break;
 
         }
+        Debug.Log("Build confirm " + id);
 
         BlueprintCursorFollower.StartCursorBlueprintFollow(s, fMode);
 
@@ -90,7 +113,8 @@ public class UIManager : MonoBehaviour
 
     public void OnResetCursor()
     {
-        BuildHintWindow.SetActive(false);
+        hintPinned = false;
+        HideBuildHint();
         HideContextMenu();
 
     }
@@ -99,11 +123,12 @@ public class UIManager : MonoBehaviour
     public GameObject ContextMenuPrefab;
     public GameObject ContextMenuButtonPrefab;
 
-
+    Action oldTruckAction;
     public void ShowContextMenu(string firstText, Action firstAction, string secondText = null, Action secondAction = null, string thirdText = null, Action thirdAction = null)
     {
 
         if (ContextMenuInstance != null) return;
+
         InputManager.SetKeyAction(KeyCode.Mouse1, new IActions.Action_Generic(() => UIManager.Instance.HideContextMenu()));
         InputManager.SetKeyAction(KeyCode.Mouse0, new IActions.Action_Generic(() => UIManager.Instance.HideContextMenu()));
 
@@ -170,21 +195,26 @@ public class UIManager : MonoBehaviour
             Destroy(ContextMenuInstance);
 
             InputManager.SetKeyAction(KeyCode.Mouse0, new IActions.Action_TrySelect());
+            if (InputManager.GetSelectedBuilding() != null && InputManager.GetSelectedBuilding().isTruck)
+                InputManager.SetKeyAction(KeyCode.Mouse1, new IActions.Action_OrderTruckMove((Truck)InputManager.GetSelectedBuilding()));
+
         }
     }
 
     public List<GameObject> InfoPanelItems = new List<GameObject>();
     public void ShowInfoPanel(string name, List<string> infoItems)
     {
-        InfoPanel.GetComponentInChildren<TMP_Text>().text = name;
         if (!InfoPanel.activeSelf)
         {
+            InfoPanel.GetComponentInChildren<TMP_Text>().text = name;
             foreach (var item in infoItems)
             {
                 var go = Instantiate(InfoItemPrefab, InfoPanel.transform);
-                go.GetComponent<TMP_Text>().text = item;
+                go.GetComponentInChildren<TMP_Text>().text = item;
                 InfoPanelItems.Add(go);
             }
+            InfoPanel.SetActive(true);
+            return;
         }
     }
     public void UpdateInfoPanel(int index, string value)
@@ -199,10 +229,12 @@ public class UIManager : MonoBehaviour
         InfoPanelItems.Clear();
         if (InfoPanel.activeSelf)
         {
-            while (InfoPanel.transform.childCount > 1)
+            for (var i = 1; i < InfoPanel.transform.childCount; i++)
             {
-                Destroy(InfoPanel.transform.GetChild(1));
+                Destroy(InfoPanel.transform.GetChild(i).gameObject);
             }
+            InfoPanel.SetActive(false);
+
         }
     }
 }

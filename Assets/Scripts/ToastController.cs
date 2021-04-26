@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using DG.Tweening;
 public class ToastController : MonoBehaviour
 {
     public static ToastController Instance;
@@ -14,25 +13,31 @@ public class ToastController : MonoBehaviour
     public List<string> ToastHistory = new List<string>();
 
 
-    public void Toast(string text, bool urgent = false, float duration = 4f)
+
+    public void Toast(string text, bool persistent = false, bool urgent = false, float duration = 4f)
     {
         Debug.Log($"<color=cyan>Toast </color>{text}");
         GameObject newToast = Instantiate(ToastPrefab);
+        newToast.GetComponent<ToastInstance>().isPersistent = persistent;
+
         newToast.transform.SetParent(gameObject.transform);
         // newToast.transform.SetAsFirstSibling();
         var tmpText = newToast.GetComponent<TextMeshProUGUI>();
         var color = urgent ? urgentColor : Color.white;
 
-        tmpText.text = text;
+        string persistentHint = " (click to dismiss) ";
+        string t;
+        if (persistent) t = text + persistentHint;
+        else t = text;
+        tmpText.text = t;
+
         tmpText.color = color;
 
         ToastHistory.Add(text);
         AudioManager.PlaySound("toast");
-        float oldY = newToast.GetComponent<RectTransform>().anchoredPosition.y;
-        tmpText.DOColor(new Color(0, 0, 0, 0), duration).SetDelay(duration * 0.5f);
-        newToast.GetComponent<RectTransform>().DOAnchorPosY(50, duration).SetDelay(duration * 0.5f);
-        Destroy(newToast, duration);
+        newToast.GetComponent<ToastInstance>().StartToastKill(duration);
 
     }
+
 
 }

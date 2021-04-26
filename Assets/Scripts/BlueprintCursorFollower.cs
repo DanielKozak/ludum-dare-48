@@ -11,7 +11,7 @@ public class BlueprintCursorFollower
     static (int x, int y) blueprintAnchorPosition;
     static Vector2 mPivotOffset;
 
-    public static void StartCursorBlueprintFollow(Sprite blueprintSprite, int fMode, Vector2 pivotOffset)
+    static void StartCursorBlueprintFollow(Sprite blueprintSprite, int fMode, Vector2 pivotOffset)
     {
         followMode = fMode;
         mPivotOffset = pivotOffset;
@@ -25,6 +25,14 @@ public class BlueprintCursorFollower
     }
     public static void StartCursorBlueprintFollow(Sprite blueprintSprite, int fMode)
     {
+        if (fMode == 4)
+        {
+            GameManager.Instance.SpawnTruck();
+            followMode = 0;
+            InputManager.ResetCursor();
+            return;
+        }
+
         StartCursorBlueprintFollow(blueprintSprite, fMode, new Vector2(0, 0));
     }
 
@@ -61,13 +69,21 @@ public class BlueprintCursorFollower
                     }
                     break;
                 case 2:
+                    if (MapController.Instance.TerrainMap.GetValue(blueprintAnchorPosition) == 2)
+                    {
+
+                        sRenderer.color = Color.red;
+                        CanPlace = false;
+                        return;
+                    }
                     foreach (var item in MapUtils.GetNeighbours(currentCellPos.x, currentCellPos.y, MapController.Instance.MapW, MapController.Instance.MapH))
                     {
                         if (MapController.Instance.TerrainMap.GetValue(item) == 2)
                         {
+
                             sRenderer.color = Color.green;
                             CanPlace = true;
-                            break;
+                            return;
                         }
                     }
                     sRenderer.color = Color.red;

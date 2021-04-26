@@ -10,6 +10,7 @@ public class Probe : Building
         offsetDropPosV3.x -= 20f;
         offsetDropPosV3.y += 50f;
         offsetDropPosV3.z = -24f;
+        GameManager.Instance.SetBananaBalance(-price);
 
         transform.position = offsetDropPosV3;
         AudioManager.PlaySound("dropPod");

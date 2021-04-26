@@ -105,4 +105,92 @@ public class IActions
 
         }
     }
+    public class Action_PlaceRefinery : IAction
+    {
+        public override void Execute()
+        {
+            if (!BlueprintCursorFollower.CanPlace)
+            {
+                //Effect
+                return;
+            }
+
+            var pos = MapUtils.GetCellFromMousePos();
+            var go = GameManager.Instantiate(DataContainer.Instance.RefineryPrefab, GameManager.Instance.transform);
+            go.name = "Banana Oil Refinery";
+            go.GetComponent<Refinery>().Place(pos);
+
+            //Effects
+
+
+            InputManager.ResetCursor();
+            // UIManager.Instance.OnResetCursor();
+
+        }
+    }
+
+
+    public class Action_PlaceRoad : IAction
+    {
+        public override void Execute()
+        {
+            if (!BlueprintCursorFollower.CanPlace)
+            {
+                //Effect
+                return;
+            }
+
+            var pos = MapUtils.GetCellFromMousePos();
+            MapController.Instance.SetTileValue(pos, 2);
+            GameManager.Instance.SetBananaBalance(-5);
+
+            // UIManager.Instance.OnResetCursor();
+
+        }
+    }
+
+    public class Action_Bulldoze : IAction
+    {
+        public override void Execute()
+        {
+            if (InputManager.GetMouseOver() != null)
+            {
+                var building = InputManager.GetMouseOver();
+                GameManager.Instance.SetBananaBalance(Mathf.FloorToInt(building.price * 0.5f));
+                GameManager.Destroy(InputManager.GetMouseOver());
+                return;
+            }
+
+
+            var pos = MapUtils.GetCellFromMousePos();
+
+            int tileType = MapController.Instance.TerrainMap.GetValue(pos);
+
+            if (tileType == -1) return;
+            MapController.Instance.SetTileValue(pos, tileType - 1);
+
+            // UIManager.Instance.OnResetCursor();
+
+        }
+    }
+    public class Action_OrderTruckMove : IAction
+    {
+        Truck truck;
+        (int, int) targetPos;
+        public Action_OrderTruckMove(Truck agent, (int, int) target)
+        {
+            truck = agent;
+            targetPos = target;
+        }
+        public Action_OrderTruckMove(Truck agent)
+        {
+            truck = agent;
+
+        }
+        public override void Execute()
+        {
+            targetPos = MapUtils.GetCellFromMousePos();
+            truck.AddOrder(new TruckActions.MoveTo(truck, targetPos));
+        }
+    }
 }

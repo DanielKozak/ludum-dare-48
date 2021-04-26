@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Entities;
+using System.Collections.Generic;
 
 public class DataContainer : MonoBehaviour
 {
@@ -7,7 +8,7 @@ public class DataContainer : MonoBehaviour
     public static DataContainer Instance;
 
 
-
+    public List<Sprite> TruckSprites;
     public Sprite ProbeGhostSprite;
     public Sprite ExtractorGhostSprite;
     public Sprite OilGhostSprite;
@@ -15,7 +16,9 @@ public class DataContainer : MonoBehaviour
     public Sprite ConcreteGhostSprite;
 
 
+    public GameObject TruckPrefab;
     public GameObject ProbePrefab;
+    public GameObject RefineryPrefab;
     public GameObject ExtractorPrefab;
 
     public Mesh MonkeyMesh;

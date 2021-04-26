@@ -1,8 +1,11 @@
 using UnityEngine;
 public class Garage : Building
 {
-    public Vector3 position;
-    public Vector3 spawnPosition;
+
+    private void Start()
+    {
+        isGarage = true;
+    }
     public override void ShowInfo()
     {
 

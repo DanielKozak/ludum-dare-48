@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Pathfinder
 {
-    public static void FindPath(IntegerMap localMap, int localWidth, int localHeight, (int, int) start, (int x, int y) goal, out Queue<Vector3> result)
+    public static bool FindPath(IntegerMap localMap, int localWidth, int localHeight, (int, int) start, (int x, int y) goal, out Queue<Vector3> result)
     {
         result = new Queue<Vector3>();
         List<(int, int)> path = new List<(int, int)>();
@@ -45,10 +45,12 @@ public class Pathfinder
                     path.Reverse();
                     for (var i = 0; i < path.Count; i++)
                     {
+                        // Debug.Log($"Pathfinder add {path[i]}");
+
                         result.Enqueue(MapUtils.GetWorldPosByCellWithLayer(path[i]));
                     }
 
-                    return;
+                    return true;
                 }
                 OpenList.Remove(currentNode);
                 ClosedList.Add(currentNode);
@@ -66,6 +68,7 @@ public class Pathfinder
                             var neighb = new Node();
                             neighb.pos = (i, j);
                             nList.Add(neighb);
+
                         }
                     }
                 foreach (var neighbour in nList)
@@ -99,7 +102,8 @@ public class Pathfinder
                 }
             }
         }
-        UnityEngine.Debug.Log($"<color=red>Pathfinder ---> Failed to find path{start} - > {goal}</color>");
+        ToastController.Instance.Toast("Truck can't find path to destination");
+        return false;
 
     }
 
