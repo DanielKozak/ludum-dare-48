@@ -10,9 +10,7 @@ public class CameraControllerTopDown : MonoBehaviour
     Vector3 mDeltaPos;
     Camera camera;
     float minZoomLevel = 10;
-    float cameraMaxZoomLevel;
-
-    int commonLayerZPos;
+    float cameraMaxZoomLevel = 30;
 
     bool camInitialised = false;
 
@@ -21,6 +19,12 @@ public class CameraControllerTopDown : MonoBehaviour
 
     private void Awake() => Instance = this;
 
+    public void SetCameraPos(Vector3 pos)
+    {
+        pos.z = camera.transform.position.z;
+        camera.transform.DOMove(pos, 0.5f).SetEase(Ease.OutCubic);
+
+    }
     void UpdateCameraMouse()
     {
 
@@ -51,10 +55,13 @@ public class CameraControllerTopDown : MonoBehaviour
             // if (camera.orthographicSize + Input.mouseScrollDelta.y > minZoomLevel && camera.orthographicSize + Input.mouseScrollDelta.y < cameraMaxZoomLevel)
             {
                 // Debug.Log(Input.mouseScrollDelta.y * camera.orthographicSize * 0.1f);
+                // camera.DOOrthoSize(Mathf.Clamp(minZoomLevel, cameraMaxZoomLevel, camera.orthographicSize + Input.mouseScrollDelta.y * camera.orthographicSize * 0.2f), 0.5f);
                 camera.DOOrthoSize(camera.orthographicSize + Input.mouseScrollDelta.y * camera.orthographicSize * 0.2f, 0.5f);
                 // camera.orthographicSize += Input.mouseScrollDelta.y;
             }
         }
+        // if (camera.orthographicSize >= cameraMaxZoomLevel) camera.orthographicSize = cameraMaxZoomLevel;
+        // if (camera.orthographicSize <= minZoomLevel) camera.orthographicSize = minZoomLevel;
 
     }
 
@@ -181,16 +188,6 @@ public class CameraControllerTopDown : MonoBehaviour
         }
         camInitialised = true;
     }
-
-    public int GetCommonlayerZPosition()
-    {
-        return commonLayerZPos;
-    }
-    public void SetCommonlayerZPosition(int position)
-    {
-        commonLayerZPos = position;
-    }
-
 
     private void Update()
     {

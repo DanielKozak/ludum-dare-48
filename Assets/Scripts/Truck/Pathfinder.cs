@@ -61,16 +61,17 @@ public class Pathfinder
                     for (int j = currentNode.pos.y - 1; j <= currentNode.pos.y + 1; j++)
                     {
                         if (i < 0 || i >= localWidth || j < 0 || j >= localHeight) continue;
-                        else if ((i, j) == currentNode.pos) continue;
-                        else
-                        {
-                            if (localMap.GetValue((i, j)) != 2) continue;
-                            var neighb = new Node();
-                            neighb.pos = (i, j);
-                            nList.Add(neighb);
+                        if ((i, j) == currentNode.pos) continue;
+                        // if (i != currentNode.pos.x || j != currentNode.pos.y) continue;
+                        if (localMap.GetValue((i, j)) != 2) continue;
+                        var neighb = new Node();
+                        neighb.pos = (i, j);
+                        nList.Add(neighb);
 
-                        }
+
                     }
+
+
                 foreach (var neighbour in nList)
                 {
                     bool gScoreBetter = false;

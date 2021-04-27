@@ -11,6 +11,7 @@ public class TileTypeEngine : MonoBehaviour
     public List<Sprite> GroundSprites = new List<Sprite>();
     public List<Sprite> ConcreteSprites = new List<Sprite>();
     public List<Sprite> JungleSprites = new List<Sprite>();
+    public Sprite GhostBanana;
 
 
     private void Awake() => Instance = this;

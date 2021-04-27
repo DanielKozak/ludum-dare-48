@@ -10,13 +10,15 @@ public class Refinery : Building
     public int cost = 50;
     (int x, int y) position;
     [NonSerialized]
-    public int maxMonkeys;
-    [NonSerialized]
-    public int currentMonkeys;
-    [NonSerialized]
     public int conversionRate = 4;
+    int conversionRate_price = 25;
     [NonSerialized]
-    public float conversionTime = 1;
+    public float conversionTime = 3;
+    int conversionTime_price = 25;
+
+    [NonSerialized]
+    public int lifeTimeFuel = 0;
+
 
     public int BananaCount { get; private set; }
     public void SetBananaCount(int delta)
@@ -86,6 +88,7 @@ public class Refinery : Building
 
                 BananaCount -= conversionRate;
                 currentProduct += 1;
+                lifeTimeFuel += 1;
                 UpdateResourceCounter();
             }
         }
@@ -122,21 +125,26 @@ public class Refinery : Building
             switch (truck.CargoType)
             {
                 case -1:
+
                     UIManager.Instance.ShowContextMenu("Load Oil", () =>
            {
-               truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 1));
-           });
+               if (currentProduct > 0) truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 1));
+           }, "Siphon bananas", () =>
+             {
+                 if (BananaCount > 0) truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 0));
+             });
                     break;
                 case 0:
                     UIManager.Instance.ShowContextMenu("Add Bananas", () =>
            {
-               truck.AddOrder(new TruckActions.Unload(truck, this, interactPos, 0));
+               truck.AddOrder(new TruckActions.Unload(truck, this, interactPos, -1));
            });
                     break;
                 case 1:
-                    UIManager.Instance.ShowContextMenu("Load Oil", () =>
+
+                    UIManager.Instance.ShowContextMenu("Load More Oil", () =>
            {
-               truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 1));
+               if (currentProduct > 0) truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 1));
            });
                     break;
             }
@@ -160,37 +168,23 @@ public class Refinery : Building
     public int lifeTimeBananas = 0;
     public override void ShowInfo()
     {
-        // List<string> items = new List<string>();
-        // items.Add($"Cost : {cost}");
-        // items.Add($"Arm reach distance : {armDistance} ");
-        // items.Add($"Bananas per grab: {bananasPerReach}");
-        // items.Add($"Lifetime bananas : {lifeTimeBananas}");
-        // items.Add($"Arm speed : {armReachSpeed} sec/grab");
-        // items.Add($"Max fuel : {maxFuel} sec/banana");
-        // items.Add($"Remaining fuel : {remainingFuel} ");
-        // items.Add($"Fuel  per grab : {remainingFuel} ");
-        // items.Add($"Bananas in storage : {BananaCount}");
-        // items.Add($"Collects bananas, destroying jungle in the process. needs to be supplied from oil refineries");
+        if (!isSelected) return;
+        List<UIManager.InfoItemStruct> items = new List<UIManager.InfoItemStruct>();
+        items.Add(new UIManager.InfoItemStruct("Cost:", $"{cost}", false));
+        items.Add(new UIManager.InfoItemStruct("Bananas per Fuel:", $"{conversionRate}", true, conversionRate_price,
+            () => { conversionRate = Mathf.Clamp(conversionRate - 1, 1, 4); conversionRate_price *= 2; }));
+        items.Add(new UIManager.InfoItemStruct("Banana conversion time :", $"{conversionTime}s", true, conversionTime_price,
+            () => { conversionTime = Mathf.Clamp(conversionTime - 1, 1, 4); conversionTime_price *= 2; }));
 
-        // // public int BananaCount = 0;
-        // UIManager.Instance.ShowInfoPanel(name, items);
+
+        items.Add(new UIManager.InfoItemStruct("Lifetime fuel made :", $"{lifeTimeFuel}", false));
+        items.Add(new UIManager.InfoItemStruct("Remaining bananas:", $"{BananaCount}", false));
+        items.Add(new UIManager.InfoItemStruct("Fuel in storage:", $"{currentProduct}", false));
+
+        // public int BananaCount = 0;
+        UIManager.Instance.ShowInfoPanel(this, name, items);
     }
 
-    public void SetResource(int resourceType, int countDelta)
-    {
-        // if (resourceType == 1) //fuel
-        // {
-        //     remainingFuel += countDelta;
-        //     SecondResourceText.text = $"{remainingFuel}/{maxFuel}";
-        //     return;
-        // }
-        // if (resourceType == 0) //bananas
-        // {
-        //     BananaCount += countDelta;
-        //     FirstResourceText.text = $"{BananaCount}";
-        //     return;
-        // }
-    }
     public void UpdateResourceCounter()
     {
         FirstResourceText.text = $"{currentProduct}";

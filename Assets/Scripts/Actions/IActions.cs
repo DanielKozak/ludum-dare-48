@@ -77,6 +77,7 @@ public class IActions
             go.GetComponent<Probe>().Drop(pos);
             go.name = "Probe";
 
+            InputManager.ResetCursor();
 
 
         }
@@ -94,6 +95,8 @@ public class IActions
 
             var pos = MapUtils.GetCellFromMousePos();
             var go = GameManager.Instantiate(DataContainer.Instance.ExtractorPrefab, GameManager.Instance.transform);
+            AudioManager.PlaySound("place_building");
+
             go.name = "BananaExtractor";
             go.GetComponent<BananaExtractor>().Place(pos);
 
@@ -114,6 +117,7 @@ public class IActions
                 //Effect
                 return;
             }
+            AudioManager.PlaySound("place_building");
 
             var pos = MapUtils.GetCellFromMousePos();
             var go = GameManager.Instantiate(DataContainer.Instance.RefineryPrefab, GameManager.Instance.transform);
@@ -139,10 +143,11 @@ public class IActions
                 //Effect
                 return;
             }
+            AudioManager.PlaySound("place_building");
 
             var pos = MapUtils.GetCellFromMousePos();
+            if (!GameManager.Instance.SetBananaBalance(-5)) return;
             MapController.Instance.SetTileValue(pos, 2);
-            GameManager.Instance.SetBananaBalance(-5);
 
             // UIManager.Instance.OnResetCursor();
 

@@ -22,14 +22,24 @@ public class InputManager : MonoBehaviour
 
         if (b == null)
         {
-            Debug.Log($"Deselect");
-            if (CurrenSelectedBuilding != null) CurrenSelectedBuilding.Deselect();
+            // Debug.Log($"Deselect");
+            if (CurrenSelectedBuilding != null)
+            {
+                CurrenSelectedBuilding.Deselect();
+                AudioManager.StopSoundContinuous(CurrenSelectedBuilding.audioSource);
+            }
+
+
         }
         else
         {
             if (CurrenSelectedBuilding != null) CurrenSelectedBuilding.Deselect();
-            Debug.Log($"Select {b.name}");
+            // Debug.Log($"Select {b.name}");
             if (b != null) b.Select();
+            if (b.isTruck) AudioManager.PlaySoundContinuous(b.audioSource, "truck_ambient");
+            if (b.isRefinery) AudioManager.PlaySoundContinuous(b.audioSource, "refinery_ambient_2");
+            if (b.isShip) AudioManager.PlaySoundContinuous(b.audioSource, "ship_ambient");
+            if (b.isExtractor) AudioManager.PlaySoundContinuous(b.audioSource, "extractor_ambient");
 
         }
         CurrenSelectedBuilding = b;

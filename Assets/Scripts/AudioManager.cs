@@ -18,6 +18,7 @@ public class AudioManager : MonoBehaviour
     static AudioSource SFX2Channel;
     static AudioSource SFX3Channel;
     static AudioSource MusicChannel;
+    static AudioSource AmbientChannel;
 
 
     public void Init()
@@ -27,6 +28,7 @@ public class AudioManager : MonoBehaviour
         SFX2Channel = GameObject.Find("SFX2Channel").GetComponent<AudioSource>();
         SFX3Channel = GameObject.Find("SFX3Channel").GetComponent<AudioSource>();
         MusicChannel = GameObject.Find("MusicChannel").GetComponent<AudioSource>();
+        AmbientChannel = GameObject.Find("AmbientChannel").GetComponent<AudioSource>();
 
         SFXList = new List<AudioClip>();
         MusicList = new List<AudioClip>();
@@ -47,6 +49,8 @@ public class AudioManager : MonoBehaviour
 
     public static void PlaySoundLocal(AudioSource source, string clipName)
     {
+        source.loop = false;
+        if (isMuted) return;
         if (source.isPlaying)
             source.Stop();
         foreach (var clip in SFXList)
@@ -62,6 +66,7 @@ public class AudioManager : MonoBehaviour
     }
     public static void PlaySound(string clipName)
     {
+        if (isMuted) return;
 
         AudioSource freeSource;
         if (SFXChannel.isPlaying)
@@ -97,11 +102,12 @@ public class AudioManager : MonoBehaviour
                 freeSource.Play();
                 return;
             }
-            Debug.Log($"AudioManager no clip {clipName}");
         }
     }
     public static void PlaySoundDelayed(string clipName, float delay)
     {
+        if (isMuted) return;
+
         Instance.StartCoroutine(DelayedSfxRoutine(clipName, delay));
     }
 
@@ -112,6 +118,29 @@ public class AudioManager : MonoBehaviour
     }
 
 
+    public static void PlaySoundContinuous(AudioSource source, string clipName)
+    {
+        if (isMuted) return;
+
+        source.loop = true;
+
+        foreach (var clip in SFXList)
+        {
+            if (clip.name == clipName)
+            {
+                source.clip = clip;
+                source.Play();
+                return;
+            }
+        }
+    }
+    public static void StopSoundContinuous(AudioSource source)
+    {
+        if (isMuted) return;
+
+        if (source.isPlaying)
+            source.Stop();
+    }
     static float musicTime;
     public static void ToggleMusic()
     {
@@ -126,5 +155,15 @@ public class AudioManager : MonoBehaviour
             MusicChannel.time = musicTime;
             MusicChannel.Play();
         }
+    }
+    static bool isMuted = false;
+    public static void ToggleSFX()
+    {
+        isMuted = !isMuted;
+        Debug.Log("isMutedSFX " + isMuted);
+        SFXChannel.mute = !SFXChannel.mute;
+        SFX2Channel.mute = !SFX2Channel.mute;
+        SFX3Channel.mute = !SFX3Channel.mute;
+        AmbientChannel.mute = !AmbientChannel.mute;
     }
 }

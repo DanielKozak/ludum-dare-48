@@ -5,7 +5,8 @@ using UnityEngine;
 using DG.Tweening;
 public class Temple : Building
 {
-    (int x, int y) position = (171, 39);
+    (int x, int y) position = (149, 38);
+    (int x, int y) interactPos = (88, 38);
 
     Camera camera;
     private void Start()
@@ -31,15 +32,7 @@ public class Temple : Building
 
             var truck = ((Truck)InputManager.GetSelectedBuilding());
 
-            var interactPos = SelectClosestConcrete();
-            if (interactPos == (-1, -1))
-            {
-                UIManager.Instance.ShowContextMenu("No path", () =>
-                           {
-                               return;
-                           });
-                return;
-            }
+
 
             switch (truck.CargoType)
             {
@@ -70,11 +63,19 @@ public class Temple : Building
 
     public override void ShowInfo()
     {
-        // List<string> items = new List<string>();
-        // items.Add($"Banana Price: 1");
-        // items.Add($"Banana oil Price: 3");
+        if (InputManager.GetSelectedBuilding() != this) return;
 
-        // // public int BananaCount = 0;
-        // UIManager.Instance.ShowInfoPanel(name, items);
+        List<UIManager.InfoItemStruct> items = new List<UIManager.InfoItemStruct>();
+
+
+        items.Add(new UIManager.InfoItemStruct("GOLDEN BANANA:", $"", false));
+        items.Add(new UIManager.InfoItemStruct("(Grab with a truck to win)", $"", false));
+        // [NonSerialized] public int bananaPrice = 2;
+        // [NonSerialized] public int fuelPrice = 2;
+        // [NonSerialized] public int fuelBuyPrice = 3;
+        // [NonSerialized] public int monkePrice = 10;
+
+
+        UIManager.Instance.ShowInfoPanel(this, name, items);
     }
 }

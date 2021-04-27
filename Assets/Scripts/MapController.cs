@@ -1,15 +1,18 @@
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using DG.Tweening;
 
 public class MapController : MonoBehaviour
 {
     public static MapController Instance;
     public Tilemap GroundTileMap;
     public Tilemap JungleTileMap;
+    public Tilemap BananaTileMap;
 
-    public int MapW = 200;
-    public int MapH = 50;
+    public int MapW = 110;
+    public int MapH = 75;
 
     public IntegerMap TerrainMap;
     public IntegerMap BananaMap;
@@ -65,10 +68,31 @@ public class MapController : MonoBehaviour
         PopulateJungleMap();
         PopulateBananaMap();
         UpdateMap();
+
+        StartCoroutine(TutorialController.Instance.StartTutorialRoutine());
         //TODO update map
     }
 
+    bool overlayToasted = false;
 
+    public void ToggleBananaOverLay()
+    {
+        if (!overlayToasted)
+        {
+            ToastController.Instance.Toast("Drop probes to reveal bananas on map. (usually in the jungle)", false, true, 7f);
+            overlayToasted = true;
+        }
+        BananaTileMap.gameObject.SetActive(!BananaTileMap.gameObject.activeSelf);
+    }
+    public void EnableBananaOverlay()
+    {
+        BananaTileMap.gameObject.SetActive(true);
+    }
+    public void DisableBananaOverlay()
+    {
+
+        BananaTileMap.gameObject.SetActive(false);
+    }
 
     public void UpdateMap()
     {
@@ -77,12 +101,6 @@ public class MapController : MonoBehaviour
 
     public void UpdateMap(int startx, int starty, int endx, int endy)
     {
-        Vector3Int[] positions;
-        TileBase[] tiles;
-        List<Tile> tileList = new List<Tile>();
-        List<Vector3Int> positionList = new List<Vector3Int>();
-        List<Vector3Int> positionRemovalList = new List<Vector3Int>();
-
         for (int i = startx; i <= endx; i++)
             for (var j = starty; j <= endy; j++)
             {
@@ -91,15 +109,15 @@ public class MapController : MonoBehaviour
                 var tile = (Tile)ScriptableObject.CreateInstance("Tile");
                 // Debug.Log($"map update {TerrainMap.GetValue(i, j)}");
                 int index = 0;
-                if (BananaMap.GetValue(i, j) > 0)
-                {
+                // if (BananaMap.GetValue(i, j) > 0)
+                // {
 
-                    tile.sprite = TileTypeEngine.Instance.SandSprites[index];
-                    tile.color = Color.yellow;
-                    JungleTileMap.SetTile(new Vector3Int(i, j, 0), tile);
-                    tile.color = Color.white;
+                //     tile.sprite = TileTypeEngine.Instance.SandSprites[index];
+                //     tile.color = Color.yellow;
+                //     JungleTileMap.SetTile(new Vector3Int(i, j, 0), tile);
+                //     tile.color = Color.white;
 
-                }
+                // }
                 switch (TerrainMap.GetValue(i, j))
                 {
                     case -1:
@@ -144,6 +162,8 @@ public class MapController : MonoBehaviour
     public void RemoveJungle((int x, int y) pos)
     {
         TerrainMap.SetValue(pos, 1);
+        JungleTileMap.SetTile(new Vector3Int(pos.x, pos.y, 0), null);
+        BananaTileMap.SetTile(new Vector3Int(pos.x, pos.y, 0), null);
         UpdateMap(pos.x - 1, pos.y - 1, pos.x + 1, pos.y + 1);
     }
 
@@ -159,13 +179,15 @@ public class MapController : MonoBehaviour
         Debug.Log($"Populating jungle map");
 
         float treshold = 380f;
-        float waterTreshold = 200f;
+        float waterTreshold = 250f;
+        float randomx = Random.Range(0, 25);
+        float randomy = Random.Range(0, 25);
         for (var x = 35; x <= MapW; x++)
             for (var y = 0; y <= MapH; y++)
             {
                 if (TerrainMap.GetValue((x, y)) == 1)
                 {
-                    float noize = Mathf.PerlinNoise(x / 10f, y / 10f) * 1000f;
+                    float noize = Mathf.PerlinNoise(x / 10f + randomx, y / 10f + randomy) * 1000f;
                     // Debug.Log($"noize {noize}");
 
                     if (noize > treshold)
@@ -183,26 +205,118 @@ public class MapController : MonoBehaviour
                 }
             }
     }
+    [System.NonSerialized] public int maxBanana = 0;
+    [System.NonSerialized] public int minBanana = 0;
     void PopulateBananaMap()
     {
         BananaMap = new IntegerMap(MapW, MapH);
-        float treshold = 10f;
+        int treshold = 11;
+        minBanana = treshold;
+        float randomx = Random.Range(0, 25);
+        float randomy = Random.Range(0, 25);
         for (var x = 35; x < MapW; x++)
             for (var y = 0; y < MapH; y++)
             {
                 if (TerrainMap.GetValue((x, y)) == 3)
                 {
-                    float noize = Mathf.PerlinNoise(x / 10f + 250, y / 10f + 10) * 1000f;
-                    if (noize / 20f > treshold)
+                    float noize = Mathf.PerlinNoise(x / 10f + randomx, y / 10f + randomy) * 1000f;
+                    if (noize / 35f > treshold)
                     {
+                        if (maxBanana < Mathf.FloorToInt(noize / 35f))
+                        {
+                            maxBanana = Mathf.FloorToInt(noize / 35f);
+                        }
                         // Debug.Log($"noize {Mathf.FloorToInt(noize / 20f)}");
-
-                        BananaMap.SetValue((x, y), Mathf.FloorToInt(noize / 20f));
+                        SetBananaMapValue((x, y), Mathf.FloorToInt(noize / 35f));
                         // Debug.Log($"{BananaMap.GetValue((x, y))}");
+
+                    }
+                    else
+                    {
+                        SetBananaMapValue((x, y), 1);
 
                     }
 
                 }
             }
+
+    }
+
+    public Transform GhostContainer;
+    public void RevealBanana(int x, int y)
+    {
+        StartCoroutine(RevealRoutine(x, y));
+    }
+    IEnumerator RevealRoutine(int x, int y)
+    {
+        float delay = Random.Range(0f, 0.2f);
+        var tileGO = Instantiate(DataContainer.Instance.GhostBananaPrefab, GhostContainer);
+
+        tileGO.transform.position = new Vector3(x + 0.5f, y + 0.5f, -24);
+
+
+        var renderer = tileGO.GetComponent<SpriteRenderer>();
+        renderer.color = GetBananaColor((x, y), BananaMap.GetValue((x, y)));
+        Vector3Int V3IPos = new Vector3Int(x, y, 0);
+
+        yield return new WaitForSeconds(delay);
+        AudioManager.PlaySound("reveal");
+        Color c = renderer.color;
+        c.a = 0;
+        renderer.DOColor(c, 0.3f).OnComplete(() =>
+        {
+            RevealBananaTile((x, y));
+            Destroy(tileGO);
+        });// = dir;
+
+
+
+    }
+
+
+    public void SetBananaMapValue((int x, int y) pos, int value)
+    {
+        BananaMap.SetValue(pos, value);
+
+        Vector3Int V3IPos = new Vector3Int(pos.x, pos.y, 0);
+        if (value == 0)
+        {
+            BananaTileMap.SetTile(V3IPos, null);
+            return;
+        }
+        var tile = BananaTileMap.GetTile<Tile>(V3IPos);
+        if (tile == null) return;
+
+        tile.color = GetBananaColor(pos, value);
+        BananaTileMap.SetTile(V3IPos, tile);
+
+    }
+
+
+    public void RevealBananaTile((int x, int y) pos)
+    {
+        Vector3Int V3IPos = new Vector3Int(pos.x, pos.y, 0);
+        Tile tile;
+        tile = BananaTileMap.GetTile<Tile>(V3IPos);
+        if (tile != null) return;
+        tile = (Tile)ScriptableObject.CreateInstance("Tile");
+        tile.sprite = DataContainer.Instance.BananaSprite;
+        tile.color = GetBananaColor(pos, BananaMap.GetValue(pos));
+        BananaTileMap.SetTile(V3IPos, tile);
+    }
+
+
+    Color GetBananaColor((int x, int y) pos, int value)
+    {
+        float maxA = 1f;
+        float minA = 0.2f;
+        // float x = (maxBanana - minBanana) / (maxA - minA);
+
+
+        float lerpedValue = Mathf.InverseLerp((float)minBanana, (float)maxBanana, value);
+        float a = Mathf.Lerp(minA, maxA, lerpedValue);
+        Color c = new Color(1, 1, 1, a);
+        // Debug.Log($"{maxBanana} {minBanana} {value} = {a}");
+        return c;
     }
 }

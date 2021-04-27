@@ -69,11 +69,13 @@ public class BlueprintCursorFollower
                     }
                     break;
                 case 2:
-                    if (MapController.Instance.TerrainMap.GetValue(blueprintAnchorPosition) == 2)
+                    int below = MapController.Instance.TerrainMap.GetValue(blueprintAnchorPosition);
+                    if (below == -1 || below == 3 || below == 2)
                     {
 
                         sRenderer.color = Color.red;
                         CanPlace = false;
+                        Debug.Log("No 1" + below);
                         return;
                     }
                     foreach (var item in MapUtils.GetNeighbours(currentCellPos.x, currentCellPos.y, MapController.Instance.MapW, MapController.Instance.MapH))
@@ -86,6 +88,8 @@ public class BlueprintCursorFollower
                             return;
                         }
                     }
+                    Debug.Log("No 2");
+
                     sRenderer.color = Color.red;
                     CanPlace = false;
 

@@ -12,21 +12,28 @@ public class BananaExtractor : Building
     int armsOut = 5;
     [NonSerialized]
     public int armDistance = 3;
+    int armDistance_price = 50;
     [NonSerialized]
     public int bananasPerReach = 1;
+    int bananasPerReach_price = 20;
     [NonSerialized]
-    public float armReachSpeed = 3f;
+    public float armReachSpeed = 5f;
+    int armReachSpeed_price = 50;
 
     int currentArms = 0;
     [NonSerialized]
-    public int fuelConsumptionPerCollect = 2;
+    public int fuelConsumptionPerCollect = 3;
+    int fuelConsumptionPerCollect_price = 50;
     public int maxFuel = 100;
     public int remainingFuel { get; private set; }
 
     public void SetFuel(int delta)
     {
+        Debug.Log("refueling extractor by " + delta);
         remainingFuel += delta;
         UpdateResourceCounter();
+        Debug.Log("extractor refueled, now  " + remainingFuel);
+
     }
 
     public int BananaCount { get; private set; }
@@ -58,7 +65,7 @@ public class BananaExtractor : Building
 
     public void Place((int x, int y) pos)
     {
-        remainingFuel = 100;
+        remainingFuel = 50;
         position = pos;
         Vector3 offsetPositionV3 = MapUtils.GetWorldPosByCellWithLayer(pos);
         offsetPositionV3.y += 0.2f;
@@ -66,55 +73,81 @@ public class BananaExtractor : Building
         transform.DOMoveY(offsetPositionV3.y - 0.2f, 0.1f);
         AudioManager.PlaySound("placeBuilding");
         //EFFECT
-        GameManager.Instance.SetBananaBalance(-price);
         StartCoroutine(DoWork());
     }
 
+    bool firstFuelToast = false;
+    bool secondFuelToast = false;
     IEnumerator DoWork()
     {
-        while (true)
+        while (isWorking)
         {
             // Debug.Log($"Extractor {id} cycle");
-            yield return new WaitForSecondsRealtime(0.2f);
+            yield return new WaitForSeconds(0.2f);
             if (remainingFuel <= 0)
             {
-                //Toast 
+                if (!firstFuelToast)
+                {
+                    firstFuelToast = true;
+                    ToastController.Instance.Toast("An extractor has run out of fuel", true, true);
+                }
+
                 remainingFuel = 0;
-                yield return new WaitForRefuel(this);
             }
             if (remainingFuel <= 20)
             {
-                //Toast 
+
+                if (!secondFuelToast)
+                {
+                    firstFuelToast = true;
+                    ToastController.Instance.Toast("An extractor is running out of fuel", false, false);
+                }
+            }
+            if (remainingFuel > 20)
+            {
+                firstFuelToast = secondFuelToast = true;
             }
             if (armsOut <= maxArms)
             {
-                var tileList = MapUtils.GetNeighboursByDistance(position.x, position.y, MapController.Instance.MapW, MapController.Instance.MapH,
-                                                                    armDistance, false);
-                List<(int, int)> bananaTiles = new List<(int, int)>();
-                foreach (var item in tileList)
+                if (remainingFuel > 0)
                 {
-                    if (MapController.Instance.BananaMap.GetValue(item) > 0)
+                    var tileList = MapUtils.GetNeighboursByDistance(position.x, position.y, MapController.Instance.MapW, MapController.Instance.MapH,
+                                                                        armDistance, false);
+                    currentReachableBananas = 0;
+                    List<(int, int)> bananaTiles = new List<(int, int)>();
+                    foreach (var item in tileList)
                     {
-                        bananaTiles.Add(item);
+                        if (MapController.Instance.BananaMap.GetValue(item) > 0)
+                        {
+
+                            bananaTiles.Add(item);
+                            currentReachableBananas += MapController.Instance.BananaMap.GetValue(item);
+                        }
                     }
+                    if (bananaTiles.Count == 0)
+                    {
+                        ToastController.Instance.Toast("An extractor has depleated it's banana supply");
+                        isWorking = false;
+                        yield break;
+                    }
+                    int index = UnityEngine.Random.Range(0, bananaTiles.Count);
+                    var chosenBanana = bananaTiles[index];
+                    // Debug.Log($"{id} at {position} chose {chosenBanana} banana");
+                    occupiedTiles.Add(bananaTiles[index]);
+                    armsOut++;
+                    remainingFuel -= fuelConsumptionPerCollect;
+                    if (remainingFuel < 0) remainingFuel = 0;
+                    UpdateResourceCounter();
+
+                    StartCoroutine(CollectBanana(chosenBanana));
                 }
-                int index = UnityEngine.Random.Range(0, bananaTiles.Count);
-                var chosenBanana = bananaTiles[index];
-                // Debug.Log($"{id} at {position} chose {chosenBanana} banana");
-                occupiedTiles.Add(bananaTiles[index]);
-                armsOut++;
-                remainingFuel -= fuelConsumptionPerCollect;
-                if (remainingFuel < 0) remainingFuel = 0;
-                UpdateResourceCounter();
-
-                StartCoroutine(CollectBanana(chosenBanana));
-
             }
         }
     }
     public GameObject ArmPrefab;
 
     public List<GameObject> ArmObjects = new List<GameObject>();
+    int currentReachableBananas = 0;
     IEnumerator CollectBanana((int x, int y) bananaTile)
     {
         yield return null;
@@ -135,14 +168,15 @@ public class BananaExtractor : Building
         DOTween.To(() => line.End, x => line.End = x, end, armReachSpeed * 0.5f).OnComplete(() => DOTween.To(() => line.End, x => line.End = x, Vector3.zero, armReachSpeed * 0.5f));
 
         // DOTween.To(() => line.DashOffset, x => line.DashOffset = x, line.DashOffset - 4, armReachSpeed);
-        yield return new WaitForSecondsRealtime(armReachSpeed * 0.5f);
-        MapController.Instance.BananaMap.SetValueAdditive(bananaTile, -bananasPerReach);
+        yield return new WaitForSeconds(armReachSpeed * 0.5f);
+        // MapController.Instance.BananaMap.SetValueAdditive(bananaTile, -bananasPerReach);
+        MapController.Instance.SetBananaMapValue(bananaTile, MapController.Instance.BananaMap.GetValue(bananaTile) - bananasPerReach);
         // Debug.Log(MapController.Instance.BananaMap.GetValue(bananaTile));
         if (MapController.Instance.BananaMap.GetValue(bananaTile) <= 0)
         {
             MapController.Instance.RemoveJungle(bananaTile);
         }
-        yield return new WaitForSecondsRealtime(armReachSpeed * 0.5f);
+        yield return new WaitForSeconds(armReachSpeed * 0.5f);
         lifeTimeBananas += bananasPerReach;
         BananaCount += bananasPerReach;
         UpdateResourceCounter();
@@ -154,22 +188,7 @@ public class BananaExtractor : Building
 
 
 
-    public class WaitForRefuel : CustomYieldInstruction
-    {
-        BananaExtractor extractor;
-        public WaitForRefuel(BananaExtractor parent)
-        {
-            extractor = parent;
-            Debug.Log("Waiting for refuel");
-        }
-        public override bool keepWaiting
-        {
-            get
-            {
-                return extractor.remainingFuel > 0;
-            }
-        }
-    }
+
 
     void ShowContextMenu()
     {
@@ -194,21 +213,26 @@ public class BananaExtractor : Building
             switch (truck.CargoType)
             {
                 case -1:
+
                     UIManager.Instance.ShowContextMenu("Load Bananas", () =>
            {
-               truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 0));
-           });
+               if (BananaCount > 0) truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 0));
+           }, "Siphon fuel", () =>
+            {
+                if (remainingFuel > 0) truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 1));
+            }
+           );
                     break;
                 case 0:
                     UIManager.Instance.ShowContextMenu("Load MORE Bananas", () =>
            {
-               truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 0));
+               if (BananaCount > 0) truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 0));
            });
                     break;
                 case 1:
                     UIManager.Instance.ShowContextMenu("Refuel", () =>
            {
-               truck.AddOrder(new TruckActions.Unload(truck, this, interactPos, 1));
+               truck.AddOrder(new TruckActions.Unload(truck, this, interactPos, -1));
            });
                     break;
             }
@@ -232,40 +256,34 @@ public class BananaExtractor : Building
     public int lifeTimeBananas = 0;
     public override void ShowInfo()
     {
-        List<string> items = new List<string>();
-        items.Add($"Cost : {cost}");
-        items.Add($"Arm reach distance : {armDistance} ");
-        items.Add($"Bananas per grab: {bananasPerReach}");
-        items.Add($"Lifetime bananas : {lifeTimeBananas}");
-        items.Add($"Arm speed : {armReachSpeed} sec/grab");
-        items.Add($"Max fuel : {maxFuel} sec/banana");
-        items.Add($"Remaining fuel : {remainingFuel} ");
-        items.Add($"Fuel  per grab : {remainingFuel} ");
-        items.Add($"Bananas in storage : {BananaCount}");
-        items.Add($"Collects bananas, destroying jungle in the process. needs to be supplied from oil refineries");
+        // Debug.Log($"{isSelected}");
+        // ToastController.Instance.Toast("banana show info");
+        if (!isSelected) return;
+
+        List<UIManager.InfoItemStruct> items = new List<UIManager.InfoItemStruct>();
+        items.Add(new UIManager.InfoItemStruct("Cost:", $"{cost}", false));
+        items.Add(new UIManager.InfoItemStruct("Arm grab distance:", $"{armDistance}", true, armDistance_price,
+            () => { armDistance += 1; armDistance_price *= 2; }));
+        items.Add(new UIManager.InfoItemStruct($"Bananas per grab:", $"{bananasPerReach}", true, bananasPerReach_price,
+            () => { bananasPerReach += 1; bananasPerReach_price = Mathf.CeilToInt(bananasPerReach_price * 1.2f); }));
+        items.Add(new UIManager.InfoItemStruct("Lifetime bananas:", $"{lifeTimeBananas}", false));
+        items.Add(new UIManager.InfoItemStruct("Arm speed:", $"{armReachSpeed}", true, armReachSpeed_price,
+            () => { armReachSpeed *= 0.8f; armReachSpeed_price = Mathf.CeilToInt(armReachSpeed_price * 1.5f); }));
+        items.Add(new UIManager.InfoItemStruct("Remaining fuel:", $"{remainingFuel}", false));
+        items.Add(new UIManager.InfoItemStruct("Fuel per grab:", $"{fuelConsumptionPerCollect}", true, fuelConsumptionPerCollect_price,
+            () => { fuelConsumptionPerCollect = Mathf.Clamp(fuelConsumptionPerCollect - 1, 1, 4); fuelConsumptionPerCollect_price = Mathf.CeilToInt(fuelConsumptionPerCollect_price * 2) > 100 ? 0 : Mathf.CeilToInt(fuelConsumptionPerCollect_price * 2); }));
+        items.Add(new UIManager.InfoItemStruct("Bananas in storage:", $"{BananaCount}", false));
+        items.Add(new UIManager.InfoItemStruct("Reachable bananas:", $"{currentReachableBananas}", false));
+        items.Add(new UIManager.InfoItemStruct("Fuel to collect all:", $"{(float)currentReachableBananas * (float)fuelConsumptionPerCollect / (float)bananasPerReach}", false));
 
         // public int BananaCount = 0;
-        UIManager.Instance.ShowInfoPanel(name, items);
+        UIManager.Instance.ShowInfoPanel(this, name, items);
     }
 
-    public void SetResource(int resourceType, int countDelta)
-    {
-        if (resourceType == 1) //fuel
-        {
-            remainingFuel += countDelta;
-            SecondResourceText.text = $"{remainingFuel}/{maxFuel}";
-            return;
-        }
-        if (resourceType == 0) //bananas
-        {
-            BananaCount += countDelta;
-            FirstResourceText.text = $"{BananaCount}";
-            return;
-        }
-    }
     public void UpdateResourceCounter()
     {
+        ShowInfo();
         FirstResourceText.text = $"{BananaCount}";
-        SecondResourceText.text = $"{remainingFuel}/{maxFuel}";
+        SecondResourceText.text = $"{remainingFuel}";///{maxFuel}";
     }
 }

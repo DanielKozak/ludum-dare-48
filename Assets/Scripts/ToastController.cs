@@ -10,7 +10,7 @@ public class ToastController : MonoBehaviour
 
     Color urgentColor = new Color(1f, 0.5f, 0.3f, 1f);
 
-    public List<string> ToastHistory = new List<string>();
+    public List<ToastInstance> ToastHistory = new List<ToastInstance>();
 
 
 
@@ -18,14 +18,15 @@ public class ToastController : MonoBehaviour
     {
         Debug.Log($"<color=cyan>Toast </color>{text}");
         GameObject newToast = Instantiate(ToastPrefab);
-        newToast.GetComponent<ToastInstance>().isPersistent = persistent;
+        var toastInstance = newToast.GetComponent<ToastInstance>();
+        toastInstance.isPersistent = persistent;
 
         newToast.transform.SetParent(gameObject.transform);
         // newToast.transform.SetAsFirstSibling();
-        var tmpText = newToast.GetComponent<TextMeshProUGUI>();
+        var tmpText = toastInstance.text;
         var color = urgent ? urgentColor : Color.white;
 
-        string persistentHint = " (click to dismiss) ";
+        string persistentHint = " (click to dismiss)";
         string t;
         if (persistent) t = text + persistentHint;
         else t = text;
@@ -33,9 +34,10 @@ public class ToastController : MonoBehaviour
 
         tmpText.color = color;
 
-        ToastHistory.Add(text);
-        AudioManager.PlaySound("toast");
-        newToast.GetComponent<ToastInstance>().StartToastKill(duration);
+        if (persistent) ToastHistory.Add(toastInstance);
+        if (urgent) AudioManager.PlaySound("toast_high");
+        else AudioManager.PlaySound("toast_low");
+        toastInstance.StartToastKill(duration);
 
     }
 

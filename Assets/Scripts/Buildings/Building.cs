@@ -18,10 +18,13 @@ public abstract class Building : MonoBehaviour
     public bool isRefinery = false;
     public bool isExtractor = false;
 
+    public AudioSource audioSource;
+
 
     public int price;
     public bool isTruck = false;
     internal bool isSelected = false;
+
     private void OnMouseEnter()
     {
         InputManager.SetMouseOver(this);
@@ -40,37 +43,27 @@ public abstract class Building : MonoBehaviour
 
     public void Select()
     {
-        if (isGarage) return;
-        if (isShip)
-        {
-            ShowInfo();
-            return;
-        }
-        if (isTemple) return;
+
+        CameraControllerTopDown.Instance.SetCameraPos(transform.position);
         isSelected = true;
-        Selector.gameObject.SetActive(true);
-        // Selector.GetComponentInChildren<Shapes.Disc>().transform.DOScale(1.1f, 1f).SetLoops(-1, LoopType.Yoyo);
-        Selector.GetComponentInChildren<Shapes.Disc>().transform.DOLocalRotate(new Vector3(0, 0, 180f), 1f, RotateMode.FastBeyond360).SetLoops(-1, LoopType.Incremental);
         if (isTruck) InputManager.SetKeyAction(KeyCode.Mouse1, new IActions.Action_OrderTruckMove((Truck)this));
 
         ShowInfo();
+        if (Selector == null) return;
+        Selector.GetComponentInChildren<Shapes.Disc>().transform.DOKill();
 
+        Selector.gameObject.SetActive(true);
+        // Selector.GetComponentInChildren<Shapes.Disc>().transform.DOScale(1.1f, 1f).SetLoops(-1, LoopType.Yoyo);
+        Selector.GetComponentInChildren<Shapes.Disc>().transform.DOLocalRotate(new Vector3(0, 0, 180f), 1f, RotateMode.FastBeyond360).SetLoops(-1, LoopType.Incremental);
     }
     public void Deselect()
     {
-        if (isGarage) return;
-        if (isShip)
-        {
-            UIManager.Instance.HideInfoPanel();
-            return;
-        }
-        if (isTemple) return;
         isSelected = false;
         Debug.Log($"Deselect {name}");
+        UIManager.Instance.HideInfoPanel();
         if (Selector == null) return;
         Selector.GetComponentInChildren<Shapes.Disc>().transform.DOKill();
         Selector.gameObject.SetActive(false);
-        UIManager.Instance.HideInfoPanel();
 
     }
 

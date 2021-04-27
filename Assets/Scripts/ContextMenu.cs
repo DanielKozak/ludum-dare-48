@@ -85,7 +85,7 @@ public class ContextMenu : MonoBehaviour
     IEnumerator OnHoverDelayRoutine(float delay)
     {
 
-        yield return new WaitForSecondsRealtime(delay);
+        yield return new WaitForSeconds(delay);
         if (isHovering)
             ShowToolTip();
     }

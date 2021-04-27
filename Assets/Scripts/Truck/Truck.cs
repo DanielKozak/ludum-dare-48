@@ -10,10 +10,15 @@ public class Truck : Building
 
     public Transform GraphicsTransform;
     [NonSerialized] public int MaxLoad = 50;
+    int MaxLoad_price = 25;
     [NonSerialized] public int CurrentLoad = 0;
     [NonSerialized] public int Speed = 2;
+    int Speed_price = 50;
+
     [NonSerialized] public int CargoType = -1;
     [NonSerialized] public int LoadingSpeed = 5;
+    int LoadingSpeed_price = 10;
+
     public Shapes.Line LoadIndicator;
     Queue<TruckAction> orders = new Queue<TruckAction>();
     Queue<Vector3> path;
@@ -27,6 +32,10 @@ public class Truck : Building
 
     private void Start()
     {
+        gameObject.name = "Truck " + GameManager.Instance.TruckCount;
+        GameManager.Instance.TruckCount += 1;
+
+        AudioManager.PlaySoundLocal(audioSource, "truck_spawn");
         TruckSprite = GetComponentInChildren<SpriteRenderer>();
         transform.rotation = Quaternion.Euler(0, 0, -90);
         // GetComponentInChildren<SpriteRenderer>().
@@ -228,7 +237,7 @@ public class Truck : Building
                         ToastController.Instance.Toast("A truck is Idle");
                         toasted = true;
                     }
-                    yield return new WaitForSecondsRealtime(0.5f);
+                    yield return new WaitForSeconds(0.5f);
                 }
                 else
                 {
@@ -236,7 +245,7 @@ public class Truck : Building
                     CurrentOrder = orders.Dequeue();
                     CurrentOrder.Init();
                     if (CurrentOrder.type == 1) currentDest = Vector3.zero;
-                    ToastController.Instance.Toast($"Truck order set {CurrentOrder.GetType().Name}");
+                    //ToastController.Instance.Toast($"Truck order set {CurrentOrder.GetType().Name}");
                     currentOrderName = CurrentOrder.GetType().Name;
 
                     timer = 0;
@@ -246,7 +255,7 @@ public class Truck : Building
             else
             {
                 if (!CurrentOrder.isCompleted)
-                    yield return new WaitForSecondsRealtime(0.5f);
+                    yield return new WaitForSeconds(0.3f);
             }
         }
     }
@@ -260,9 +269,41 @@ public class Truck : Building
     // {
     //     throw new System.NotImplementedException();
     // }
+
+    int maxSpeed = 5;
     public override void ShowInfo()
     {
-        Debug.Log("TruckInfo");
+        if (!isSelected) return;
+        List<UIManager.InfoItemStruct> items = new List<UIManager.InfoItemStruct>();
+        string load = "";
+        switch (CurrentLoad)
+        {
+            case -1:
+                load = "Nothing";
+                break;
+            case 0:
+                load = "Bananas";
+                break;
+            case 2:
+                load = "Fuel";
+                break;
+            case 3:
+                load = "Monkeys!";
+                break;
+        }
+
+        //items.Add(new UIManager.InfoItemStruct("Carrying:", $"{load}", false));
+        items.Add(new UIManager.InfoItemStruct("Current Load:", $"{CurrentLoad}", false));
+        items.Add(new UIManager.InfoItemStruct("Maximum Load:", $"{MaxLoad}", true, MaxLoad_price,
+            () => { MaxLoad += 10; MaxLoad_price += 25; }));
+        if (Speed >= maxSpeed) items.Add(new UIManager.InfoItemStruct("Speed:", $"{Speed}", false));
+        else items.Add(new UIManager.InfoItemStruct("Speed:", $"{Speed}", true, Speed_price,
+             () => { Speed += 1; Speed_price = Mathf.FloorToInt((Speed_price) * 1.5f); }));
+        items.Add(new UIManager.InfoItemStruct("Loading Speed:", $"{LoadingSpeed}", true, LoadingSpeed_price,
+            () => { LoadingSpeed += 1; LoadingSpeed_price *= 2; }));
+
+
+        UIManager.Instance.ShowInfoPanel(this, name, items);
     }
 
     public class WaitForTaskCompleted : CustomYieldInstruction
