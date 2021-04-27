@@ -173,7 +173,7 @@ public class TruckActions
         }
         public override void OnCompleted()
         {
-            //TODO WIN
+            GameManager.Instance.Win();
 
         }
         public override void Init()
