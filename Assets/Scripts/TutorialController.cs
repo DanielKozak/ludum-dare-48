@@ -23,7 +23,7 @@ public class TutorialController : MonoBehaviour
     public IEnumerator StartTutorialRoutine()
     {
 
-        yield return new WaitForSeconds(tutorialDelay / 10);
+        yield return new WaitForSeconds(tutorialDelay);
         if (!isActive) yield break;
         ToastController.Instance.Toast("Hi there! Welcome to the Jungle! I'm a tutorial. If you dont want to see me - press a button on the left.", true, true);
         yield return new WaitForSeconds(tutorialDelay);

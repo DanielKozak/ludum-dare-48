@@ -92396,9 +92396,9 @@ MonoBehaviour:
   BananaBalancelabel: {fileID: 1347995588}
   SpawnRadius: 20
   camera: {fileID: 0}
-  confirmMenu: {fileID: 681842144}
-  winscreen: {fileID: 0}
-  menuscreen: {fileID: 0}
+  ConfirmMenu: {fileID: 2037656562}
+  winscreen: {fileID: 840841727}
+  menuscreen: {fileID: 1499411485}
 --- !u!4 &1840210243
 Transform:
   m_ObjectHideFlags: 0

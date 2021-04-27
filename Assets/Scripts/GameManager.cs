@@ -108,16 +108,16 @@ public class GameManager : MonoBehaviour
     {
         AudioManager.ToggleSFX();
     }
-    public GameObject confirmMenu;
+    public GameObject ConfirmMenu;
     public void OnQuitButtonClicked()
     {
         Time.timeScale = 0;
-        confirmMenu.SetActive(true);
+        ConfirmMenu.SetActive(true);
     }
     public void OnQuitDeny()
     {
         Time.timeScale = 1;
-        confirmMenu.SetActive(false);
+        ConfirmMenu.SetActive(false);
 
     }
     public void OnQuitApprove()
