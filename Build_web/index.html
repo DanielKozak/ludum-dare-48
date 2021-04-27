@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | Monkey Business</title>
+  </head>
+  <body style="text-align: center">
+    <canvas id="unity-canvas" style="width: 1600px; height: 900px; background: #231F20"></canvas>
+    <script src="Build/Build_web.loader.js"></script>
+    <script>
+      createUnityInstance(document.querySelector("#unity-canvas"), {
+        dataUrl: "Build/Build_web.data.gz",
+        frameworkUrl: "Build/Build_web.framework.js.gz",
+        codeUrl: "Build/Build_web.wasm.gz",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "LonelyHelixGames",
+        productName: "Monkey Business",
+        productVersion: "1.0.1",
+      });
+    </script>
+  </body>
+</html>

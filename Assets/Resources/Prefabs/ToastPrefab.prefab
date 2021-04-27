@@ -227,8 +227,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 3198552392450340521}
         m_TargetAssemblyTypeName: ToastInstance, Assembly-CSharp
-        m_MethodName: StartToastKill
-        m_Mode: 4
+        m_MethodName: Kill
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
