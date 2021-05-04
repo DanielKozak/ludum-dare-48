@@ -40,6 +40,7 @@ public class BananaExtractor : Building
     public void SetBananaCount(int delta)
     {
         BananaCount += delta;
+        if (BananaCount < 0) BananaCount = 0;
         UpdateResourceCounter();
     }
 
@@ -263,7 +264,10 @@ public class BananaExtractor : Building
         List<UIManager.InfoItemStruct> items = new List<UIManager.InfoItemStruct>();
         items.Add(new UIManager.InfoItemStruct("Cost:", $"{cost}", false));
         items.Add(new UIManager.InfoItemStruct("Arm grab distance:", $"{armDistance}", true, armDistance_price,
-            () => { armDistance += 1; armDistance_price *= 2; }));
+            () =>
+            {
+                armDistance += 1; armDistance_price *= 2; isWorking = true;
+            }));
         items.Add(new UIManager.InfoItemStruct($"Bananas per grab:", $"{bananasPerReach}", true, bananasPerReach_price,
             () => { bananasPerReach += 1; bananasPerReach_price = Mathf.CeilToInt(bananasPerReach_price * 1.2f); }));
         items.Add(new UIManager.InfoItemStruct("Lifetime bananas:", $"{lifeTimeBananas}", false));

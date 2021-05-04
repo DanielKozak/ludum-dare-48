@@ -73,7 +73,7 @@ public class Ship : Building
             switch (truck.CargoType)
             {
                 case -1:
-                    UIManager.Instance.ShowContextMenu("Buy truckload of oil", () =>
+                    if (GameManager.Instance.SetBananaBalance(-fuelBuyPrice * truck.MaxLoad, true)) UIManager.Instance.ShowContextMenu("Buy truckload of oil", () =>
            {
                truck.AddOrder(new TruckActions.Load(truck, this, interactPos, 1));
            });
@@ -115,7 +115,7 @@ public class Ship : Building
 
 
         items.Add(new UIManager.InfoItemStruct("Banana Export Price:", $"{bananaPrice}", false));
-        items.Add(new UIManager.InfoItemStruct("Fuel Export Price:", $"{bananaPrice}", false));
+        items.Add(new UIManager.InfoItemStruct("Fuel Export Price:", $"{fuelPrice}", false));
         items.Add(new UIManager.InfoItemStruct("Fuel Import Price:", $"{fuelBuyPrice}", false));
         // [NonSerialized] public int bananaPrice = 2;
         // [NonSerialized] public int fuelPrice = 2;

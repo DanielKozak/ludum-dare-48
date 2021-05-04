@@ -28,19 +28,19 @@ public class CameraControllerTopDown : MonoBehaviour
     void UpdateCameraMouse()
     {
 
-        if (Input.GetMouseButtonDown(2))
+        if (Input.GetMouseButtonDown(1))
         {
             camera.transform.DOKill();
 
             mStartPos = camera.ScreenToWorldPoint(Input.mousePosition);
             return;
         }
-        if (Input.GetMouseButton(2))
+        if (Input.GetMouseButton(1))
         {
             mDeltaPos = camera.ScreenToWorldPoint(Input.mousePosition) - mStartPos;
             camera.transform.position -= mDeltaPos;
         }
-        if (Input.GetMouseButtonUp(2))
+        if (Input.GetMouseButtonUp(1))
         {
             mDeltaPos = (camera.ScreenToWorldPoint(Input.mousePosition) - mStartPos).normalized;
             camera.transform.DOMove((camera.transform.position - mDeltaPos), 0.5f).SetEase(Ease.OutExpo);
